@@ -47,9 +47,9 @@ function HomePage() {
   useEffect(() => {
     if (!selected) return;
     const fresh = languages.find((l) => l.code === selected.code);
-    if (fresh && fresh.updated_at_key !== undefined) return;
     if (fresh) setSelected(fresh as LanguageContent);
-  }, [languages, selected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [languages]);
 
   return (
     <main className="relative min-h-screen overflow-hidden">

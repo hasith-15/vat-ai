@@ -114,9 +114,11 @@ export const uploadLanguageMedia = createServerFn({ method: "POST" })
     if (signErr || !signed) throw new Error(signErr?.message ?? "sign failed");
 
     const column = data.kind === "image" ? "image_url" : "audio_url";
+    const patch: Record<string, string> = { updated_at: new Date().toISOString() };
+    patch[column] = signed.signedUrl;
     const { error: updErr } = await supabaseAdmin
       .from("languages")
-      .update({ [column]: signed.signedUrl, updated_at: new Date().toISOString() })
+      .update(patch as never)
       .eq("code", data.code);
     if (updErr) throw new Error(updErr.message);
 
