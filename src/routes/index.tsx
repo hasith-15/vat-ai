@@ -8,7 +8,7 @@ import { ArrowLeft, Pause, Play } from "lucide-react";
 import { RobotScene } from "@/components/RobotScene";
 import { listLanguages } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
-import { WHATSAPP_NUMBER } from "@/lib/languages";
+import { WHATSAPP_NUMBER, WHATSAPP_MESSAGES } from "@/lib/languages";
 
 export const Route = createFileRoute("/")({
   head: () => ({
