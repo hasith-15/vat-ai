@@ -226,7 +226,7 @@ function ContentView({ content }: { content: LanguageContent }) {
         </div>
 
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGES[content.code as keyof typeof WHATSAPP_MESSAGES] ?? WHATSAPP_MESSAGES.en)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-neon mt-8 inline-flex items-center gap-2"
