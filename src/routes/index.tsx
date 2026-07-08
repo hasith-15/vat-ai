@@ -8,7 +8,7 @@ import { ArrowLeft, Pause, Play } from "lucide-react";
 import { RobotScene } from "@/components/RobotScene";
 import { listLanguages } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
-import { WHATSAPP_NUMBER } from "@/lib/languages";
+import { WHATSAPP_NUMBER, WHATSAPP_MESSAGES } from "@/lib/languages";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -226,7 +226,7 @@ function ContentView({ content }: { content: LanguageContent }) {
         </div>
 
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGES[content.code as keyof typeof WHATSAPP_MESSAGES] ?? WHATSAPP_MESSAGES.en)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-neon mt-8 inline-flex items-center gap-2"
