@@ -19,11 +19,11 @@ export const Route = createFileRoute("/")({
         content:
           "VAT-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
       },
-      { property: "og:title", content: "VAT-Ai — Multilingual AI Voice Agents" },
+      { property: "og:title", content: "VAT-Ai — Multilingual AI Voice Agents for Business" },
       {
         property: "og:description",
         content:
-          "AI voice agents that talk to your customers in their language. Telugu, Hindi, English & more.",
+          "VAT-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
