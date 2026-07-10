@@ -86,15 +86,20 @@ function LoginCard({ onSuccess }: { onSuccess: (pw: string) => void }) {
     e.preventDefault();
     setBusy(true);
     try {
-      await login({ data: { username, password: pw } });
-      onSuccess(pw);
-      toast.success("Welcome back");
+      const res = await login({ data: { username, password: pw } });
+      if (res.ok) {
+        onSuccess(pw);
+        toast.success("Welcome back");
+      } else {
+        toast.error("Invalid username or password");
+      }
     } catch {
-      toast.error("Invalid username or password");
+      toast.error("Something went wrong. Try again.");
     } finally {
       setBusy(false);
     }
   };
+
 
   return (
     <motion.form
