@@ -182,7 +182,7 @@ export function RevenueCalculator() {
             min={10}
             max={5000}
             step={10}
-            display={formatUsd(ticket)}
+            display={formatMoney(ticket, currency)}
             onChange={setTicket}
           />
           <Slider
