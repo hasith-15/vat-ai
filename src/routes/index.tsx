@@ -15,7 +15,7 @@ import {
 } from "@/components/LandingSections";
 import { listLanguages } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
-import { WHATSAPP_NUMBER, WHATSAPP_MESSAGES } from "@/lib/languages";
+import { WHATSAPP_NUMBER, WHATSAPP_MESSAGES, FALLBACK_LANGUAGES } from "@/lib/languages";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,11 +42,19 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const qc = useQueryClient();
   const fetchLanguages = useServerFn(listLanguages);
-  const { data: languages = [], isLoading } = useQuery({
+  const { data: rawLanguages, isLoading, isError } = useQuery({
     queryKey: ["languages"],
     queryFn: () => fetchLanguages(),
     staleTime: 30_000,
   });
+
+  // Always show languages — use fallback if query failed or returned empty
+  const languages: LanguageContent[] =
+    rawLanguages && rawLanguages.length > 0
+      ? (rawLanguages as LanguageContent[])
+      : isLoading
+        ? []
+        : FALLBACK_LANGUAGES;
 
   const [selected, setSelected] = useState<LanguageContent | null>(null);
 
