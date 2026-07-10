@@ -6,6 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Pause, Play } from "lucide-react";
 
 import { RobotScene } from "@/components/RobotScene";
+import {
+  IntegrationsSection,
+  PricingSection,
+  ProblemSection,
+  RevenueCalculator,
+  ShowcaseGrid,
+} from "@/components/LandingSections";
 import { listLanguages } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
 import { WHATSAPP_NUMBER, WHATSAPP_MESSAGES } from "@/lib/languages";
@@ -92,6 +99,15 @@ function HomePage() {
             )}
           </AnimatePresence>
         </div>
+
+        <div className="relative z-10 bg-gradient-to-b from-transparent via-background/60 to-background">
+          <ProblemSection />
+          <RevenueCalculator />
+          <IntegrationsSection />
+          <ShowcaseGrid />
+          <PricingSection />
+        </div>
+
 
         <footer className="relative z-10 flex flex-col items-center gap-2 border-t border-white/5 py-6 text-xs text-muted-foreground">
           <div>© {new Date().getFullYear()} VAT-Ai. Speak the smarter way.</div>
