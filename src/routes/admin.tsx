@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
-import { ArrowLeft, LogOut, Pencil, Save, Upload } from "lucide-react";
+import { ArrowLeft, ImagePlus, LogOut, Pencil, Plus, Save, Trash2, Upload } from "lucide-react";
 
 import {
   adminLogin,
@@ -13,6 +13,13 @@ import {
   uploadLanguageMedia,
 } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
+import {
+  DEFAULT_SHOWCASE,
+  fileToDataUrl,
+  loadShowcase,
+  saveShowcase,
+  type ShowcaseItem,
+} from "@/lib/showcase";
 
 const PW_KEY = "vatai_admin_pw";
 
