@@ -201,23 +201,42 @@ export function RevenueCalculator() {
           <div className="neon-border scanlines relative flex h-full flex-col items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.20_0.05_265)] to-[oklch(0.14_0.03_265)] p-8 text-center">
             <div className="absolute inset-0 opacity-40 [background:radial-gradient(400px_200px_at_50%_0%,oklch(0.72_0.22_320/0.35),transparent_70%)]" />
             <div className="relative">
+              <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs">
+                {(["USD", "INR"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    className={`rounded-full px-3 py-1 font-medium transition ${
+                      currency === c
+                        ? "bg-gradient-to-r from-[oklch(0.82_0.20_195)] to-[oklch(0.72_0.22_320)] text-black"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {c === "USD" ? "$ USD" : "₹ INR"}
+                  </button>
+                ))}
+              </div>
               <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
                 Estimated Monthly Revenue Loss
               </div>
               <motion.div
-                key={loss}
+                key={loss + currency}
                 initial={{ scale: 0.96, opacity: 0.6 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 220, damping: 18 }}
                 className="mt-3 font-display text-5xl leading-none md:text-6xl"
               >
                 <span className="bg-gradient-to-r from-[oklch(0.82_0.20_195)] to-[oklch(0.72_0.22_320)] bg-clip-text text-transparent">
-                  {formatUsd(loss)}
+                  {formatMoney(loss, currency)}
                 </span>
               </motion.div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                ≈ {formatMoney(loss, currency === "USD" ? "INR" : "USD")}
+              </div>
               <p className="mt-5 text-sm text-muted-foreground">
                 VAT-AI can help you recover these lost conversions instantly.
               </p>
+
               <a href={BOOKING_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="btn-neon mt-6 inline-flex items-center gap-2">
                 Recover my revenue <Sparkles className="h-4 w-4" />
               </a>
