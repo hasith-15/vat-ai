@@ -13,6 +13,7 @@ import {
   uploadLanguageMedia,
 } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
+import { FALLBACK_LANGUAGES } from "@/lib/languages";
 import {
   DEFAULT_SHOWCASE,
   fileToDataUrl,
@@ -147,10 +148,18 @@ function LoginCard({ onSuccess }: { onSuccess: (pw: string) => void }) {
 function Dashboard({ password, onSignOut }: { password: string; onSignOut: () => void }) {
   const qc = useQueryClient();
   const fetchAll = useServerFn(listLanguages);
-  const { data: languages = [], isLoading } = useQuery({
+  const { data: rawLanguages, isLoading } = useQuery({
     queryKey: ["languages"],
     queryFn: () => fetchAll(),
   });
+
+  // Always show languages — use fallback if query failed or returned empty
+  const languages: LanguageContent[] =
+    rawLanguages && rawLanguages.length > 0
+      ? (rawLanguages as LanguageContent[])
+      : isLoading
+        ? []
+        : FALLBACK_LANGUAGES;
 
   const [editing, setEditing] = useState<string | null>(null);
   const [tab, setTab] = useState<"languages" | "showcase">("languages");
