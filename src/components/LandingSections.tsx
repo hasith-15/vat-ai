@@ -72,7 +72,7 @@ const PROBLEMS = [
   {
     icon: InfinityIcon,
     title: "Limitless Scale",
-    body: "A human caps out at ~100 calls a day. VAT-AI dials thousands simultaneously without missing a beat.",
+    body: "A human caps out at ~100 calls a day. VYAt-AI dials thousands simultaneously without missing a beat.",
     stat: "∞",
     accent: "from-[oklch(0.85_0.18_150)] to-[oklch(0.82_0.20_195)]",
   },
@@ -234,7 +234,7 @@ export function RevenueCalculator() {
                 ≈ {formatMoney(loss, currency === "USD" ? "INR" : "USD")}
               </div>
               <p className="mt-5 text-sm text-muted-foreground">
-                VAT-AI can help you recover these lost conversions instantly.
+                VYAt-AI can help you recover these lost conversions instantly.
               </p>
 
               <a href={BOOKING_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="btn-neon mt-6 inline-flex items-center gap-2">
@@ -329,7 +329,7 @@ export function IntegrationsSection() {
             Seamless integration. <span className="text-neon">Continuous growth.</span>
           </>
         }
-        subtitle="VAT-AI acts as an intelligent automation layer, triggering calls directly from your CRMs, web actions, and messaging apps — no engineering team required."
+        subtitle="VYAt-AI acts as an intelligent automation layer, triggering calls directly from your CRMs, web actions, and messaging apps — no engineering team required."
       />
 
       <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-3">
@@ -372,7 +372,7 @@ export function ShowcaseGrid() {
             One AI voice, <span className="text-neon-2">every trigger.</span>
           </>
         }
-        subtitle="See how VAT-AI plugs into the tools you already use to start conversations at the perfect moment."
+        subtitle="See how VYAt-AI plugs into the tools you already use to start conversations at the perfect moment."
       />
 
       <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-2">

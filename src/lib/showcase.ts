@@ -74,7 +74,7 @@ export function fileToDataUrl(file: File): Promise<string> {
 // Booking WhatsApp — update the phone number below to your business number.
 export const BOOKING_WHATSAPP_NUMBER = "918500416456"; // TODO: replace with your number
 export const BOOKING_WHATSAPP_MESSAGE =
-  "Hi VAT-AI team! I visited your website and want to set up a live AI Voice Agent demo for my business.";
+  "Hi VYAt-AI team! I visited your website and want to set up a live AI Voice Agent demo for my business.";
 export const BOOKING_WHATSAPP_URL = `https://wa.me/${BOOKING_WHATSAPP_NUMBER}?text=${encodeURIComponent(
   BOOKING_WHATSAPP_MESSAGE,
 )}`;

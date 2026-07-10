@@ -77,23 +77,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VAT-Ai — Multilingual AI Voice Agents for Business" },
+      { title: "VYAt-Ai — Multilingual AI Voice Agents for Business" },
       {
         name: "description",
         content:
-          "VAT-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
+          "VYAt-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
       },
-      { name: "author", content: "VAT-Ai" },
-      { property: "og:title", content: "VAT-Ai — Multilingual AI Voice Agents for Business" },
+      { name: "author", content: "VYAt-Ai" },
+      { property: "og:title", content: "VYAt-Ai — Multilingual AI Voice Agents for Business" },
       {
         property: "og:description",
         content:
-          "VAT-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
+          "VYAt-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "VAT-Ai — Multilingual AI Voice Agents for Business" },
-      { name: "twitter:description", content: "VAT-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI." },
+      { name: "twitter:title", content: "VYAt-Ai — Multilingual AI Voice Agents for Business" },
+      { name: "twitter:description", content: "VYAt-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/83774a25-cae5-4cb0-bc4c-b3e7fc487312" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/83774a25-cae5-4cb0-bc4c-b3e7fc487312" },
     ],

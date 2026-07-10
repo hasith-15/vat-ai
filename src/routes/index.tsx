@@ -20,17 +20,17 @@ import { WHATSAPP_NUMBER, WHATSAPP_MESSAGES } from "@/lib/languages";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "VAT-Ai — Multilingual AI Voice Agents for Business" },
+      { title: "VYAt-Ai — Multilingual AI Voice Agents for Business" },
       {
         name: "description",
         content:
-          "VAT-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
+          "VYAt-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
       },
-      { property: "og:title", content: "VAT-Ai — Multilingual AI Voice Agents for Business" },
+      { property: "og:title", content: "VYAt-Ai — Multilingual AI Voice Agents for Business" },
       {
         property: "og:description",
         content:
-          "VAT-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
+          "VYAt-Ai deploys AI voice agents that speak Telugu, Hindi, English and more so you can do business the smarter way. Book a live demo call with our AI.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -70,7 +70,7 @@ function HomePage() {
             <span className="grid h-9 w-9 place-items-center rounded-lg neon-border font-display text-neon">
               V
             </span>
-            <span className="font-display text-lg tracking-widest">VAT-Ai</span>
+            <span className="font-display text-lg tracking-widest">VYAt-Ai</span>
           </div>
           {selected && (
             <button
@@ -110,7 +110,7 @@ function HomePage() {
 
 
         <footer className="relative z-10 flex flex-col items-center gap-2 border-t border-white/5 py-6 text-xs text-muted-foreground">
-          <div>© {new Date().getFullYear()} VAT-Ai. Speak the smarter way.</div>
+          <div>© {new Date().getFullYear()} VYAt-Ai. Speak the smarter way.</div>
           <Link
             to="/admin"
             className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground/60 hover:text-neon"
@@ -158,7 +158,7 @@ function HeroView({
         transition={{ delay: 0.15, duration: 0.7 }}
         className="font-display text-[clamp(3.5rem,12vw,7.5rem)] font-bold leading-none"
       >
-        <span className="text-neon">VAT</span>
+        <span className="text-neon">VYAt</span>
         <span className="text-foreground/80">-</span>
         <span className="text-neon-2">Ai</span>
       </motion.h1>

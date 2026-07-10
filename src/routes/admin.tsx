@@ -26,8 +26,8 @@ const PW_KEY = "vatai_admin_pw";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "VAT-Ai Admin" },
-      { name: "description", content: "Admin dashboard for VAT-Ai content." },
+      { title: "VYAt-Ai Admin" },
+      { name: "description", content: "Admin dashboard for VYAt-Ai content." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -54,7 +54,7 @@ function AdminPage() {
             <ArrowLeft className="h-4 w-4" /> Back to site
           </Link>
           <span className="font-display text-sm tracking-widest text-neon">
-            VAT-Ai · Admin
+            VYAt-Ai · Admin
           </span>
         </div>
 
@@ -286,7 +286,7 @@ function ShowcaseManager() {
       {
         id: `item-${Date.now()}`,
         title: "New Use Case",
-        description: "Describe how VAT-AI plugs in here.",
+        description: "Describe how VYAt-AI plugs in here.",
         mediaUrl: "",
         mediaType: "image",
       },

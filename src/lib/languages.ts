@@ -15,16 +15,16 @@ export interface LanguageContent {
 export const WHATSAPP_NUMBER = "918500416456";
 
 export const WHATSAPP_MESSAGES: Record<LanguageCode, string> = {
-  en: "Hi VAT-AI, I want to book an AI Call Demo.",
-  te: "హాయ్ VAT-AI, నేను AI కాల్ డెమో బుక్ చేయాలనుకుంటున్నాను.",
-  hi: "नमस्ते VAT-AI, मैं एक AI कॉल डेमो बुक करना चाहता हूँ।",
-  ta: "வணக்கம் VAT-AI, நான் ஒரு AI கால் டெமோவை பதிவு செய்ய விரும்புகிறேன்.",
-  kn: "ನಮಸ್ಕಾರ VAT-AI, ನಾನು AI ಕಾಲ್ ಡೆಮೊ ಬುಕ್ ಮಾಡಲು ಬಯಸುತ್ತೇನೆ.",
-  ml: "ഹായ് VAT-AI, എനിക്ക് ഒരു AI കോൾ ഡെമോ ബുക്ക് ചെയ്യണം.",
-  bn: "হাই VAT-AI, আমি একটি AI কল ডেমো বুক করতে চাই।",
-  mr: "नमस्कार VAT-AI, मला एक AI कॉल डेमो बुक करायचा आहे.",
-  gu: "હાય VAT-AI, હું એક AI કૉલ ડેમો બુક કરવા માંગુ છું.",
-  pa: "ਸਤ ਸ੍ਰੀ ਅਕਾਲ VAT-AI, ਮੈਂ ਇੱਕ AI ਕਾਲ ਡੈਮੋ ਬੁੱਕ ਕਰਨਾ ਚਾਹੁੰਦਾ ਹਾਂ।",
+  en: "Hi VYAt-AI, I want to book an AI Call Demo.",
+  te: "హాయ్ VYAt-AI, నేను AI కాల్ డెమో బుక్ చేయాలనుకుంటున్నాను.",
+  hi: "नमस्ते VYAt-AI, मैं एक AI कॉल डेमो बुक करना चाहता हूँ।",
+  ta: "வணக்கம் VYAt-AI, நான் ஒரு AI கால் டெமோவை பதிவு செய்ய விரும்புகிறேன்.",
+  kn: "ನಮಸ್ಕಾರ VYAt-AI, ನಾನು AI ಕಾಲ್ ಡೆಮೊ ಬುಕ್ ಮಾಡಲು ಬಯಸುತ್ತೇನೆ.",
+  ml: "ഹായ് VYAt-AI, എനിക്ക് ഒരു AI കോൾ ഡെമോ ബുക്ക് ചെയ്യണം.",
+  bn: "হাই VYAt-AI, আমি একটি AI কল ডেমো বুক করতে চাই।",
+  mr: "नमस्कार VYAt-AI, मला एक AI कॉल डेमो बुक करायचा आहे.",
+  gu: "હાય VYAt-AI, હું એક AI કૉલ ડેમો બુક કરવા માંગુ છું.",
+  pa: "ਸਤ ਸ੍ਰੀ ਅਕਾਲ VYAt-AI, ਮੈਂ ਇੱਕ AI ਕਾਲ ਡੈਮੋ ਬੁੱਕ ਕਰਨਾ ਚਾਹੁੰਦਾ ਹਾਂ।",
 };
 
 export const FALLBACK_LANGUAGES: LanguageContent[] = [
