@@ -100,6 +100,15 @@ function HomePage() {
           </AnimatePresence>
         </div>
 
+        <div className="relative z-10 bg-gradient-to-b from-transparent via-background/60 to-background">
+          <ProblemSection />
+          <RevenueCalculator />
+          <IntegrationsSection />
+          <ShowcaseGrid />
+          <PricingSection />
+        </div>
+
+
         <footer className="relative z-10 flex flex-col items-center gap-2 border-t border-white/5 py-6 text-xs text-muted-foreground">
           <div>© {new Date().getFullYear()} VAT-Ai. Speak the smarter way.</div>
           <Link
