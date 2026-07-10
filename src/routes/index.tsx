@@ -6,6 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Pause, Play } from "lucide-react";
 
 import { RobotScene } from "@/components/RobotScene";
+import {
+  IntegrationsSection,
+  PricingSection,
+  ProblemSection,
+  RevenueCalculator,
+  ShowcaseGrid,
+} from "@/components/LandingSections";
 import { listLanguages } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
 import { WHATSAPP_NUMBER, WHATSAPP_MESSAGES } from "@/lib/languages";
