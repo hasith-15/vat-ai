@@ -140,16 +140,17 @@ function formatMoney(n: number, currency: Currency) {
 
 
 export function RevenueCalculator() {
+  const [currency, setCurrency] = useState<Currency>("USD");
   const [leads, setLeads] = useState(1000);
   const [ticket, setTicket] = useState(100);
   const [close, setClose] = useState(10);
 
   const loss = useMemo(() => {
-    // 40% of leads lost to slow manual response
     const lostLeads = leads * 0.4;
     const lostDeals = lostLeads * (close / 100);
     return Math.round(lostDeals * ticket);
   }, [leads, ticket, close]);
+
 
   return (
     <section className="relative mx-auto max-w-6xl px-6 py-24">
