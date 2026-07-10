@@ -428,7 +428,8 @@ export function ShowcaseGrid() {
 interface Tier {
   name: string;
   subtitle: string;
-  price: string;
+  priceUsd: string;
+  priceInr: string;
   cadence?: string;
   features: string[];
   highlighted?: boolean;
@@ -438,7 +439,8 @@ const TIERS: Tier[] = [
   {
     name: "Starter",
     subtitle: "For small teams beginning automation.",
-    price: "$99",
+    priceUsd: "$99",
+    priceInr: "₹8,299",
     cadence: "/mo",
     features: [
       "1,000 AI Minutes",
@@ -450,7 +452,8 @@ const TIERS: Tier[] = [
   {
     name: "Professional",
     subtitle: "For growing businesses scaling up.",
-    price: "$299",
+    priceUsd: "$299",
+    priceInr: "₹24,999",
     cadence: "/mo",
     highlighted: true,
     features: [
@@ -463,7 +466,8 @@ const TIERS: Tier[] = [
   {
     name: "Enterprise",
     subtitle: "Custom solutions for large scale.",
-    price: "Custom",
+    priceUsd: "Custom",
+    priceInr: "Custom",
     features: [
       "Unlimited Minutes",
       "Voice Cloning",
@@ -472,6 +476,7 @@ const TIERS: Tier[] = [
     ],
   },
 ];
+
 
 export function PricingSection() {
   return (
