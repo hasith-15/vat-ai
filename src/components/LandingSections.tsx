@@ -124,13 +124,20 @@ export function ProblemSection() {
 
 /* ------------------------- Revenue Loss Calculator ------------------------- */
 
-function formatUsd(n: number) {
+const USD_TO_INR = 83;
+type Currency = "USD" | "INR";
+
+function formatMoney(n: number, currency: Currency) {
+  if (currency === "INR") {
+    return "₹" + Math.round(n * USD_TO_INR).toLocaleString("en-IN");
+  }
   return n.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   });
 }
+
 
 export function RevenueCalculator() {
   const [leads, setLeads] = useState(1000);
