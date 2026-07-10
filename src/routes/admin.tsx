@@ -148,6 +148,7 @@ function Dashboard({ password, onSignOut }: { password: string; onSignOut: () =>
   });
 
   const [editing, setEditing] = useState<string | null>(null);
+  const [tab, setTab] = useState<"languages" | "showcase">("languages");
 
   return (
     <motion.div
@@ -159,7 +160,7 @@ function Dashboard({ password, onSignOut }: { password: string; onSignOut: () =>
         <div>
           <h1 className="font-display text-3xl">Content Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Manage the headline, CTA, hero image and voice sample per language.
+            Manage languages, hero media, and the homepage showcase grid.
           </p>
         </div>
         <button
@@ -170,54 +171,74 @@ function Dashboard({ password, onSignOut }: { password: string; onSignOut: () =>
         </button>
       </div>
 
-      {isLoading ? (
-        <div className="grid gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-white/5" />
-          ))}
-        </div>
+      <div className="mb-6 inline-flex rounded-xl border border-white/10 bg-white/5 p-1">
+        {(["languages", "showcase"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`rounded-lg px-4 py-2 text-sm capitalize transition ${
+              tab === t
+                ? "bg-gradient-to-r from-[oklch(0.82_0.20_195)] to-[oklch(0.72_0.22_320)] text-black"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "languages" ? "Languages" : "Manage Showcase Grid"}
+          </button>
+        ))}
+      </div>
+
+      {tab === "languages" ? (
+        isLoading ? (
+          <div className="grid gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-16 animate-pulse rounded-xl bg-white/5" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {(languages as LanguageContent[]).map((l) => (
+              <div
+                key={l.code}
+                className="glass-panel flex flex-col gap-3 rounded-xl p-4 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="grid h-11 w-11 place-items-center rounded-lg neon-border font-display text-sm">
+                    {String(l.sort_order).padStart(2, "0")}
+                  </div>
+                  <div>
+                    <div className="font-display text-lg">
+                      {l.native_name}{" "}
+                      <span className="text-sm text-muted-foreground">/ {l.name}</span>
+                    </div>
+                    <div className="line-clamp-1 max-w-md text-xs text-muted-foreground">
+                      {l.headline}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {l.image_url && (
+                    <span className="rounded-md bg-white/5 px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Image ✓
+                    </span>
+                  )}
+                  {l.audio_url && (
+                    <span className="rounded-md bg-white/5 px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Audio ✓
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setEditing(l.code)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:border-[oklch(0.82_0.2_195)]"
+                  >
+                    <Pencil className="h-4 w-4" /> Edit
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       ) : (
-        <div className="grid gap-3">
-          {(languages as LanguageContent[]).map((l) => (
-            <div
-              key={l.code}
-              className="glass-panel flex flex-col gap-3 rounded-xl p-4 md:flex-row md:items-center md:justify-between"
-            >
-              <div className="flex items-center gap-4">
-                <div className="grid h-11 w-11 place-items-center rounded-lg neon-border font-display text-sm">
-                  {String(l.sort_order).padStart(2, "0")}
-                </div>
-                <div>
-                  <div className="font-display text-lg">
-                    {l.native_name}{" "}
-                    <span className="text-sm text-muted-foreground">/ {l.name}</span>
-                  </div>
-                  <div className="line-clamp-1 max-w-md text-xs text-muted-foreground">
-                    {l.headline}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {l.image_url && (
-                  <span className="rounded-md bg-white/5 px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Image ✓
-                  </span>
-                )}
-                {l.audio_url && (
-                  <span className="rounded-md bg-white/5 px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Audio ✓
-                  </span>
-                )}
-                <button
-                  onClick={() => setEditing(l.code)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:border-[oklch(0.82_0.2_195)]"
-                >
-                  <Pencil className="h-4 w-4" /> Edit
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ShowcaseManager />
       )}
 
       <AnimatePresence>
@@ -234,6 +255,135 @@ function Dashboard({ password, onSignOut }: { password: string; onSignOut: () =>
     </motion.div>
   );
 }
+
+/* ---------------------------- Showcase Manager --------------------------- */
+
+function ShowcaseManager() {
+  const [items, setItems] = useState<ShowcaseItem[]>([]);
+
+  useEffect(() => {
+    setItems(loadShowcase());
+  }, []);
+
+  const commit = (next: ShowcaseItem[]) => {
+    setItems(next);
+    saveShowcase(next);
+  };
+
+  const updateItem = (id: string, patch: Partial<ShowcaseItem>) =>
+    commit(items.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+
+  const removeItem = (id: string) => commit(items.filter((i) => i.id !== id));
+
+  const addItem = () =>
+    commit([
+      ...items,
+      {
+        id: `item-${Date.now()}`,
+        title: "New Use Case",
+        description: "Describe how VAT-AI plugs in here.",
+        mediaUrl: "",
+        mediaType: "image",
+      },
+    ]);
+
+  const onFile = async (id: string, file: File) => {
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const mediaType: "image" | "video" =
+        file.type.startsWith("video") || /\.mp4$/i.test(file.name) ? "video" : "image";
+      updateItem(id, { mediaUrl: dataUrl, mediaType });
+      toast.success("Media uploaded");
+    } catch {
+      toast.error("Could not read that file");
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Uploads are stored in your browser (base64) and instantly render on the homepage grid.
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => commit(DEFAULT_SHOWCASE)}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Reset to defaults
+          </button>
+          <button
+            onClick={addItem}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:border-[oklch(0.82_0.2_195)]"
+          >
+            <Plus className="h-4 w-4" /> Add item
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {items.map((item) => (
+          <div key={item.id} className="glass-panel rounded-2xl p-4">
+            <div className="scanlines relative mb-4 aspect-video overflow-hidden rounded-xl bg-white/5">
+              {item.mediaUrl ? (
+                item.mediaType === "video" ? (
+                  <video src={item.mediaUrl} muted loop autoPlay playsInline className="h-full w-full object-cover" />
+                ) : (
+                  <img src={item.mediaUrl} alt={item.title} className="h-full w-full object-cover" />
+                )
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                  <ImagePlus className="h-8 w-8" />
+                </div>
+              )}
+            </div>
+
+            <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Title</label>
+            <input
+              value={item.title}
+              onChange={(e) => updateItem(item.id, { title: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[oklch(0.82_0.2_195)]"
+            />
+
+            <label className="mt-3 block text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+              Description
+            </label>
+            <textarea
+              value={item.description}
+              rows={2}
+              onChange={(e) => updateItem(item.id, { description: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[oklch(0.82_0.2_195)]"
+            />
+
+            <div className="mt-3 flex items-center gap-2">
+              <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 bg-white/5 px-3 py-2 text-xs hover:border-[oklch(0.82_0.2_195)]">
+                <Upload className="h-4 w-4" />
+                Upload image / mp4
+                <input
+                  type="file"
+                  accept="image/*,video/mp4,video/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) onFile(item.id, f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <button
+                onClick={() => removeItem(item.id)}
+                className="rounded-lg border border-white/10 bg-white/5 p-2 text-muted-foreground hover:border-red-400/60 hover:text-red-300"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 /* ------------------------------- Edit modal ------------------------------- */
 
