@@ -124,7 +124,13 @@ export function ProblemSection() {
 
 /* ------------------------- Revenue Loss Calculator ------------------------- */
 
-function formatUsd(n: number) {
+const USD_TO_INR = 83;
+type Currency = "USD" | "INR";
+
+function formatMoney(n: number, currency: Currency) {
+  if (currency === "INR") {
+    return "₹" + Math.round(n * USD_TO_INR).toLocaleString("en-IN");
+  }
   return n.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -132,17 +138,19 @@ function formatUsd(n: number) {
   });
 }
 
+
 export function RevenueCalculator() {
+  const [currency, setCurrency] = useState<Currency>("USD");
   const [leads, setLeads] = useState(1000);
   const [ticket, setTicket] = useState(100);
   const [close, setClose] = useState(10);
 
   const loss = useMemo(() => {
-    // 40% of leads lost to slow manual response
     const lostLeads = leads * 0.4;
     const lostDeals = lostLeads * (close / 100);
     return Math.round(lostDeals * ticket);
   }, [leads, ticket, close]);
+
 
   return (
     <section className="relative mx-auto max-w-6xl px-6 py-24">
@@ -174,7 +182,7 @@ export function RevenueCalculator() {
             min={10}
             max={5000}
             step={10}
-            display={formatUsd(ticket)}
+            display={formatMoney(ticket, currency)}
             onChange={setTicket}
           />
           <Slider
@@ -193,23 +201,42 @@ export function RevenueCalculator() {
           <div className="neon-border scanlines relative flex h-full flex-col items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.20_0.05_265)] to-[oklch(0.14_0.03_265)] p-8 text-center">
             <div className="absolute inset-0 opacity-40 [background:radial-gradient(400px_200px_at_50%_0%,oklch(0.72_0.22_320/0.35),transparent_70%)]" />
             <div className="relative">
+              <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs">
+                {(["USD", "INR"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    className={`rounded-full px-3 py-1 font-medium transition ${
+                      currency === c
+                        ? "bg-gradient-to-r from-[oklch(0.82_0.20_195)] to-[oklch(0.72_0.22_320)] text-black"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {c === "USD" ? "$ USD" : "₹ INR"}
+                  </button>
+                ))}
+              </div>
               <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
                 Estimated Monthly Revenue Loss
               </div>
               <motion.div
-                key={loss}
+                key={loss + currency}
                 initial={{ scale: 0.96, opacity: 0.6 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 220, damping: 18 }}
                 className="mt-3 font-display text-5xl leading-none md:text-6xl"
               >
                 <span className="bg-gradient-to-r from-[oklch(0.82_0.20_195)] to-[oklch(0.72_0.22_320)] bg-clip-text text-transparent">
-                  {formatUsd(loss)}
+                  {formatMoney(loss, currency)}
                 </span>
               </motion.div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                ≈ {formatMoney(loss, currency === "USD" ? "INR" : "USD")}
+              </div>
               <p className="mt-5 text-sm text-muted-foreground">
                 VAT-AI can help you recover these lost conversions instantly.
               </p>
+
               <a href={BOOKING_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="btn-neon mt-6 inline-flex items-center gap-2">
                 Recover my revenue <Sparkles className="h-4 w-4" />
               </a>
@@ -401,7 +428,8 @@ export function ShowcaseGrid() {
 interface Tier {
   name: string;
   subtitle: string;
-  price: string;
+  priceUsd: string;
+  priceInr: string;
   cadence?: string;
   features: string[];
   highlighted?: boolean;
@@ -411,7 +439,8 @@ const TIERS: Tier[] = [
   {
     name: "Starter",
     subtitle: "For small teams beginning automation.",
-    price: "$99",
+    priceUsd: "$99",
+    priceInr: "₹8,299",
     cadence: "/mo",
     features: [
       "1,000 AI Minutes",
@@ -423,7 +452,8 @@ const TIERS: Tier[] = [
   {
     name: "Professional",
     subtitle: "For growing businesses scaling up.",
-    price: "$299",
+    priceUsd: "$299",
+    priceInr: "₹24,999",
     cadence: "/mo",
     highlighted: true,
     features: [
@@ -436,7 +466,8 @@ const TIERS: Tier[] = [
   {
     name: "Enterprise",
     subtitle: "Custom solutions for large scale.",
-    price: "Custom",
+    priceUsd: "Custom",
+    priceInr: "Custom",
     features: [
       "Unlimited Minutes",
       "Voice Cloning",
@@ -445,6 +476,7 @@ const TIERS: Tier[] = [
     ],
   },
 ];
+
 
 export function PricingSection() {
   return (
@@ -481,12 +513,20 @@ export function PricingSection() {
             )}
             <h3 className="font-display text-2xl">{t.name}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{t.subtitle}</p>
-            <div className="mt-6 flex items-baseline gap-1">
-              <span className="font-display text-5xl">{t.price}</span>
-              {t.cadence && (
-                <span className="text-sm text-muted-foreground">{t.cadence}</span>
-              )}
+            <div className="mt-6">
+              <div className="flex items-baseline gap-1">
+                <span className="font-display text-5xl">{t.priceUsd}</span>
+                {t.cadence && (
+                  <span className="text-sm text-muted-foreground">{t.cadence}</span>
+                )}
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {t.priceInr === "Custom" ? "Tailored INR pricing" : (
+                  <>≈ <span className="text-foreground/90">{t.priceInr}</span>{t.cadence}</>
+                )}
+              </div>
             </div>
+
             <ul className="mt-6 space-y-3 text-sm">
               {t.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
