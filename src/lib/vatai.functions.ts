@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { FALLBACK_LANGUAGES } from "./languages";
 
 // Hardcoded admin credentials per product spec. NOTE: anyone who calls these
 // server functions with the correct password can update content — this matches
@@ -20,27 +21,47 @@ function publicClient() {
 
 /** Public: list all languages, ordered. */
 export const listLanguages = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = publicClient();
-  const { data, error } = await supabase
-    .from("languages")
-    .select("code,name,native_name,sort_order,headline,button_text,image_url,audio_url")
-    .order("sort_order", { ascending: true });
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  try {
+    if (!process.env.SUPABASE_URL) {
+      return FALLBACK_LANGUAGES;
+    }
+    const supabase = publicClient();
+    const { data, error } = await supabase
+      .from("languages")
+      .select("code,name,native_name,sort_order,headline,button_text,image_url,audio_url")
+      .order("sort_order", { ascending: true });
+    
+    if (error || !data || data.length === 0) {
+      return FALLBACK_LANGUAGES;
+    }
+    return data;
+  } catch (err) {
+    return FALLBACK_LANGUAGES;
+  }
 });
 
 /** Public: fetch one language's content. */
 export const getLanguage = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ code: z.string().min(2).max(4) }).parse(d))
   .handler(async ({ data }) => {
-    const supabase = publicClient();
-    const { data: row, error } = await supabase
-      .from("languages")
-      .select("code,name,native_name,sort_order,headline,button_text,image_url,audio_url")
-      .eq("code", data.code)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    return row;
+    try {
+      if (!process.env.SUPABASE_URL) {
+        return FALLBACK_LANGUAGES.find((l) => l.code === data.code) || null;
+      }
+      const supabase = publicClient();
+      const { data: row, error } = await supabase
+        .from("languages")
+        .select("code,name,native_name,sort_order,headline,button_text,image_url,audio_url")
+        .eq("code", data.code)
+        .maybeSingle();
+        
+      if (error || !row) {
+        return FALLBACK_LANGUAGES.find((l) => l.code === data.code) || null;
+      }
+      return row;
+    } catch (err) {
+      return FALLBACK_LANGUAGES.find((l) => l.code === data.code) || null;
+    }
   });
 
 /** Admin: verify credentials (used by the login screen). */
