@@ -513,12 +513,20 @@ export function PricingSection() {
             )}
             <h3 className="font-display text-2xl">{t.name}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{t.subtitle}</p>
-            <div className="mt-6 flex items-baseline gap-1">
-              <span className="font-display text-5xl">{t.price}</span>
-              {t.cadence && (
-                <span className="text-sm text-muted-foreground">{t.cadence}</span>
-              )}
+            <div className="mt-6">
+              <div className="flex items-baseline gap-1">
+                <span className="font-display text-5xl">{t.priceUsd}</span>
+                {t.cadence && (
+                  <span className="text-sm text-muted-foreground">{t.cadence}</span>
+                )}
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {t.priceInr === "Custom" ? "Tailored INR pricing" : (
+                  <>≈ <span className="text-foreground/90">{t.priceInr}</span>{t.cadence}</>
+                )}
+              </div>
             </div>
+
             <ul className="mt-6 space-y-3 text-sm">
               {t.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
