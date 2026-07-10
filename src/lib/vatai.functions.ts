@@ -50,9 +50,9 @@ export const adminLogin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const ok = data.username === ADMIN_USER && data.password === ADMIN_PASS;
-    if (!ok) throw new Error("Invalid credentials");
-    return { ok: true };
+    return { ok };
   });
+
 
 /** Admin: update text content for a language. */
 export const updateLanguageContent = createServerFn({ method: "POST" })
