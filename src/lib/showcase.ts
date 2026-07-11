@@ -2,11 +2,10 @@ export interface ShowcaseItem {
   id: string;
   title: string;
   description: string;
-  mediaUrl: string;
-  mediaType: "image" | "video";
+  media_url: string;
+  media_type: "image" | "video";
+  sort_order: number;
 }
-
-const KEY = "vatai_showcase_items";
 
 export const DEFAULT_SHOWCASE: ShowcaseItem[] = [
   {
@@ -14,67 +13,38 @@ export const DEFAULT_SHOWCASE: ShowcaseItem[] = [
     title: "CRM Triggers",
     description:
       "Fire an AI call the moment a new lead lands in your CRM — HubSpot, Salesforce, Zoho, or custom.",
-    mediaUrl: "",
-    mediaType: "image",
+    media_url: "",
+    media_type: "image",
+    sort_order: 1,
   },
   {
     id: "web",
     title: "Web Actions",
     description:
       "Form fill, checkout abandonment, or a button click can instantly spin up a personalised AI call.",
-    mediaUrl: "",
-    mediaType: "image",
+    media_url: "",
+    media_type: "image",
+    sort_order: 2,
   },
   {
     id: "whatsapp",
     title: "Messaging Apps",
     description:
       "Escalate a WhatsApp or SMS conversation into a live AI voice call in the customer's language.",
-    mediaUrl: "",
-    mediaType: "image",
+    media_url: "",
+    media_type: "image",
+    sort_order: 3,
   },
   {
     id: "calendar",
     title: "Calendar & Bookings",
     description:
       "Auto-confirm, reschedule and follow up appointments without a human ever picking up the phone.",
-    mediaUrl: "",
-    mediaType: "image",
+    media_url: "",
+    media_type: "image",
+    sort_order: 4,
   },
 ];
-
-export function loadShowcase(): ShowcaseItem[] {
-  if (typeof window === "undefined") return DEFAULT_SHOWCASE;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return DEFAULT_SHOWCASE;
-    const parsed = JSON.parse(raw) as ShowcaseItem[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_SHOWCASE;
-    return parsed;
-  } catch {
-    return DEFAULT_SHOWCASE;
-  }
-}
-
-export function saveShowcase(items: ShowcaseItem[]) {
-  if (typeof window === "undefined") return;
-  // Let QuotaExceededError propagate so callers can handle it
-  window.localStorage.setItem(KEY, JSON.stringify(items));
-  try {
-    window.dispatchEvent(new CustomEvent("vatai:showcase-updated"));
-  } catch {
-    // swallow dispatch errors — the save itself succeeded
-  }
-}
-
-export function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
 
 // Booking WhatsApp — update the phone number below to your business number.
 export const BOOKING_WHATSAPP_NUMBER = "918500416456"; // TODO: replace with your number

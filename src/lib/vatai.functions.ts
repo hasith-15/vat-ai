@@ -146,6 +146,73 @@ export const uploadLanguageMedia = createServerFn({ method: "POST" })
     return { ok: true, url: signed.signedUrl };
   });
 
+/** Public: list all showcase items, ordered by sort_order. */
+export const listShowcase = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    if (!process.env.SUPABASE_URL) {
+      return [];
+    }
+    const supabase = publicClient();
+    const { data, error } = await supabase
+      .from("showcase_items")
+      .select("id,title,description,media_url,media_type,sort_order")
+      .order("sort_order", { ascending: true });
+
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+});
+
+/** Admin: upsert a showcase item (title, description, sort_order). */
+export const upsertShowcaseItem = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        password: z.string(),
+        id: z.string().min(1).max(100),
+        title: z.string().min(1).max(300),
+        description: z.string().max(1000),
+        sort_order: z.number().int().min(0),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    if (data.password !== ADMIN_PASS) throw new Error("Unauthorized");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("showcase_items")
+      .upsert(
+        {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          sort_order: data.sort_order,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" },
+      );
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Admin: delete a showcase item. */
+export const deleteShowcaseItem = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({ password: z.string(), id: z.string().min(1).max(100) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    if (data.password !== ADMIN_PASS) throw new Error("Unauthorized");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("showcase_items")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 /** Admin: upload a showcase item's media file (base64) and return a signed URL. */
 export const uploadShowcaseMedia = createServerFn({ method: "POST" })
   .inputValidator((d) =>
@@ -156,6 +223,7 @@ export const uploadShowcaseMedia = createServerFn({ method: "POST" })
         filename: z.string().min(1).max(200),
         content_type: z.string().min(1).max(120),
         base64: z.string().min(1),
+        media_type: z.enum(["image", "video"]).default("image"),
       })
       .parse(d),
   )
@@ -177,5 +245,86 @@ export const uploadShowcaseMedia = createServerFn({ method: "POST" })
       .createSignedUrl(path, SIGNED_URL_TTL);
     if (signErr || !signed) throw new Error(signErr?.message ?? "sign failed");
 
+    // Persist the media URL in the database so it's available on every device
+    const { error: updErr } = await supabaseAdmin
+      .from("showcase_items")
+      .update({
+        media_url: signed.signedUrl,
+        media_type: data.media_type,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id);
+    if (updErr) throw new Error(updErr.message);
+
     return { ok: true, url: signed.signedUrl };
   });
+
+/** Admin: register a language media file uploaded directly to storage by client (generates signed URL + saves to DB). */
+export const registerLanguageMedia = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        password: z.string(),
+        code: z.string().min(2).max(4),
+        kind: z.enum(["image", "audio"]),
+        path: z.string().min(1),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    if (data.password !== ADMIN_PASS) throw new Error("Unauthorized");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: signed, error: signErr } = await supabaseAdmin.storage
+      .from("vatai-media")
+      .createSignedUrl(data.path, SIGNED_URL_TTL);
+    if (signErr || !signed) throw new Error(signErr?.message ?? "sign failed");
+
+    const column = data.kind === "image" ? "image_url" : "audio_url";
+    const patch: Record<string, string> = { updated_at: new Date().toISOString() };
+    patch[column] = signed.signedUrl;
+    
+    const { error: updErr } = await supabaseAdmin
+      .from("languages")
+      .update(patch as never)
+      .eq("code", data.code);
+    if (updErr) throw new Error(updErr.message);
+
+    return { ok: true, url: signed.signedUrl };
+  });
+
+/** Admin: register a showcase media file uploaded directly to storage by client (generates signed URL + saves to DB). */
+export const registerShowcaseMedia = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        password: z.string(),
+        id: z.string().min(1).max(100),
+        path: z.string().min(1),
+        media_type: z.enum(["image", "video"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    if (data.password !== ADMIN_PASS) throw new Error("Unauthorized");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: signed, error: signErr } = await supabaseAdmin.storage
+      .from("vatai-media")
+      .createSignedUrl(data.path, SIGNED_URL_TTL);
+    if (signErr || !signed) throw new Error(signErr?.message ?? "sign failed");
+
+    const { error: updErr } = await supabaseAdmin
+      .from("showcase_items")
+      .update({
+        media_url: signed.signedUrl,
+        media_type: data.media_type,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id);
+    if (updErr) throw new Error(updErr.message);
+
+    return { ok: true, url: signed.signedUrl };
+  });
+
+

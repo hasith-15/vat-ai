@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   BadgeCheck,
   Battery,
@@ -16,9 +18,10 @@ import {
 
 import {
   BOOKING_WHATSAPP_URL,
-  loadShowcase,
+  DEFAULT_SHOWCASE,
   type ShowcaseItem,
 } from "@/lib/showcase";
+import { listShowcase } from "@/lib/vatai.functions";
 
 /* ------------------------------ Section wrapper ---------------------------- */
 
@@ -350,18 +353,19 @@ export function IntegrationsSection() {
 /* -------------------------- Showcase / Use Cases -------------------------- */
 
 export function ShowcaseGrid() {
-  const [items, setItems] = useState<ShowcaseItem[]>([]);
+  const fetchShowcase = useServerFn(listShowcase);
+  const { data: rawItems, isLoading } = useQuery({
+    queryKey: ["showcase"],
+    queryFn: () => fetchShowcase(),
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    setItems(loadShowcase());
-    const onUpdate = () => setItems(loadShowcase());
-    window.addEventListener("vatai:showcase-updated", onUpdate);
-    window.addEventListener("storage", onUpdate);
-    return () => {
-      window.removeEventListener("vatai:showcase-updated", onUpdate);
-      window.removeEventListener("storage", onUpdate);
-    };
-  }, []);
+  const items: ShowcaseItem[] =
+    rawItems && rawItems.length > 0
+      ? (rawItems as ShowcaseItem[])
+      : isLoading
+        ? []
+        : DEFAULT_SHOWCASE;
 
   return (
     <section className="relative mx-auto max-w-6xl px-6 pb-8">
@@ -376,48 +380,52 @@ export function ShowcaseGrid() {
       />
 
       <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
-        {items.map((item, i) => (
-          <motion.article
-            key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ delay: i * 0.05, duration: 0.5 }}
-            className="glass-panel group overflow-hidden rounded-2xl"
-          >
-            <div className="scanlines relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[oklch(0.22_0.05_265)] to-[oklch(0.14_0.03_265)]">
-              {item.mediaUrl ? (
-                item.mediaType === "video" ? (
-                  <video
-                    src={item.mediaUrl}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="h-full w-full object-cover"
-                  />
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-64 animate-pulse rounded-2xl bg-white/5" />
+            ))
+          : items.map((item, i) => (
+            <motion.article
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ delay: i * 0.05, duration: 0.5 }}
+              className="glass-panel group overflow-hidden rounded-2xl"
+            >
+              <div className="scanlines relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[oklch(0.22_0.05_265)] to-[oklch(0.14_0.03_265)]">
+                {item.media_url ? (
+                  item.media_type === "video" ? (
+                    <video
+                      src={item.media_url}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={item.media_url}
+                      alt={item.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )
                 ) : (
-                  <img
-                    src={item.mediaUrl}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                )
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <div className="anim-pulse-glow grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-[oklch(0.85_0.18_195)] to-[oklch(0.55_0.2_320)] text-black">
-                    <Sparkles className="h-8 w-8" />
+                  <div className="flex h-full w-full items-center justify-center">
+                    <div className="anim-pulse-glow grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-[oklch(0.85_0.18_195)] to-[oklch(0.55_0.2_320)] text-black">
+                      <Sparkles className="h-8 w-8" />
+                    </div>
                   </div>
-                </div>
-              )}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-            </div>
-            <div className="p-5">
-              <h3 className="font-display text-xl">{item.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{item.description}</p>
-            </div>
-          </motion.article>
-        ))}
+                )}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+              </div>
+              <div className="p-5">
+                <h3 className="font-display text-xl">{item.title}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">{item.description}</p>
+              </div>
+            </motion.article>
+          ))}
       </div>
     </section>
   );

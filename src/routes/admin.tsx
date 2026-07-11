@@ -6,19 +6,23 @@ import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { ArrowLeft, ImagePlus, LogOut, Pencil, Plus, Save, Trash2, Upload } from "lucide-react";
 
+import { supabase } from "@/integrations/supabase/client";
 import {
   adminLogin,
   listLanguages,
+  listShowcase,
   updateLanguageContent,
   uploadLanguageMedia,
   uploadShowcaseMedia,
+  upsertShowcaseItem,
+  deleteShowcaseItem,
+  registerLanguageMedia,
+  registerShowcaseMedia,
 } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
 import { FALLBACK_LANGUAGES } from "@/lib/languages";
 import {
   DEFAULT_SHOWCASE,
-  loadShowcase,
-  saveShowcase,
   type ShowcaseItem,
 } from "@/lib/showcase";
 
@@ -273,93 +277,108 @@ function Dashboard({ password, onSignOut }: { password: string; onSignOut: () =>
 /* ---------------------------- Showcase Manager --------------------------- */
 
 function ShowcaseManager({ password }: { password: string }) {
-  const [items, setItems] = useState<ShowcaseItem[]>([]);
-  const [uploading, setUploading] = useState<string | null>(null);
-  const upload = useServerFn(uploadShowcaseMedia);
+  const fetchShowcase = useServerFn(listShowcase);
+  const upsertItem = useServerFn(upsertShowcaseItem);
+  const deleteItem = useServerFn(deleteShowcaseItem);
 
-  useEffect(() => {
-    setItems(loadShowcase());
-  }, []);
+  const { data: rawItems, refetch, isLoading } = useQuery({
+    queryKey: ["showcase"],
+    queryFn: () => fetchShowcase(),
+  });
 
-  const commit = (next: ShowcaseItem[]) => {
-    setItems(next);
-    saveShowcase(next);
+  const items = rawItems || [];
+
+  const handleAddItem = async () => {
+    try {
+      const newId = `item-${Date.now()}`;
+      await upsertItem({
+        data: {
+          password,
+          id: newId,
+          title: "New Use Case",
+          description: "Describe how VYAt-AI plugs in here.",
+          sort_order: items.length + 1,
+        },
+      });
+      toast.success("Item added");
+      refetch();
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to add item");
+    }
   };
 
-  const updateItem = (id: string, patch: Partial<ShowcaseItem>) =>
-    commit(items.map((i) => (i.id === id ? { ...i, ...patch } : i)));
-
-  const removeItem = (id: string) => commit(items.filter((i) => i.id !== id));
-
-  const addItem = () =>
-    commit([
-      ...items,
-      {
-        id: `item-${Date.now()}`,
-        title: "New Use Case",
-        description: "Describe how VYAt-AI plugs in here.",
-        mediaUrl: "",
-        mediaType: "image",
-      },
-    ]);
-
-  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB — Supabase storage handles large files
-
-  const onFile = async (id: string, file: File) => {
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error(
-        `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 25 MB.`,
-      );
-      return;
-    }
-
-    setUploading(id);
+  const handleDeleteItem = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
     try {
-      // Convert file to base64 for the server function
-      const buf = await file.arrayBuffer();
-      let binary = "";
-      const bytes = new Uint8Array(buf);
-      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-      const base64 = btoa(binary);
-
-      const res = await upload({
+      await deleteItem({
         data: {
           password,
           id,
-          filename: file.name,
-          content_type: file.type || "application/octet-stream",
-          base64,
         },
       });
-
-      const mediaType: "image" | "video" =
-        file.type.startsWith("video") || /\.mp4$/i.test(file.name) ? "video" : "image";
-
-      // Store only the Supabase signed URL — tiny string, no localStorage quota issues
-      updateItem(id, { mediaUrl: res.url, mediaType });
-      toast.success("Media uploaded");
+      toast.success("Item deleted");
+      refetch();
     } catch (err) {
-      toast.error((err as Error).message || "Upload failed");
-    } finally {
-      setUploading(null);
+      toast.error((err as Error).message || "Failed to delete item");
     }
   };
+
+  const handleResetToDefaults = async () => {
+    if (
+      !confirm(
+        "This will delete all current showcase items and reset them to defaults. Are you sure?"
+      )
+    )
+      return;
+    try {
+      // Delete existing
+      for (const item of items) {
+        await deleteItem({ data: { password, id: item.id } });
+      }
+      // Insert default ones
+      for (const item of DEFAULT_SHOWCASE) {
+        await upsertItem({
+          data: {
+            password,
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            sort_order: item.sort_order,
+          },
+        });
+      }
+      toast.success("Reset completed");
+      refetch();
+    } catch (err) {
+      toast.error((err as Error).message || "Reset failed");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-64 animate-pulse rounded-2xl bg-white/5" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Uploads are saved to cloud storage. Titles and descriptions sync to your browser.
+          Uploads and text changes are saved to the cloud database.
         </p>
         <div className="flex gap-2">
           <button
-            onClick={() => commit(DEFAULT_SHOWCASE)}
+            onClick={handleResetToDefaults}
             className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
           >
             Reset to defaults
           </button>
           <button
-            onClick={addItem}
+            onClick={handleAddItem}
             className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm hover:border-[oklch(0.82_0.2_195)]"
           >
             <Plus className="h-4 w-4" /> Add item
@@ -369,63 +388,183 @@ function ShowcaseManager({ password }: { password: string }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         {items.map((item) => (
-          <div key={item.id} className="glass-panel rounded-2xl p-4">
-            <div className="scanlines relative mb-4 aspect-video overflow-hidden rounded-xl bg-white/5">
-              {item.mediaUrl ? (
-                item.mediaType === "video" ? (
-                  <video src={item.mediaUrl} muted loop autoPlay playsInline className="h-full w-full object-cover" />
-                ) : (
-                  <img src={item.mediaUrl} alt={item.title} className="h-full w-full object-cover" />
-                )
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                  <ImagePlus className="h-8 w-8" />
-                </div>
-              )}
-            </div>
-
-            <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Title</label>
-            <input
-              value={item.title}
-              onChange={(e) => updateItem(item.id, { title: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[oklch(0.82_0.2_195)]"
-            />
-
-            <label className="mt-3 block text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-              Description
-            </label>
-            <textarea
-              value={item.description}
-              rows={2}
-              onChange={(e) => updateItem(item.id, { description: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[oklch(0.82_0.2_195)]"
-            />
-
-            <div className="mt-3 flex items-center gap-2">
-              <label className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 bg-white/5 px-3 py-2 text-xs hover:border-[oklch(0.82_0.2_195)] ${uploading === item.id ? "opacity-60 pointer-events-none" : "cursor-pointer"}`}>
-                <Upload className="h-4 w-4" />
-                {uploading === item.id ? "Uploading…" : "Upload image / mp4"}
-                <input
-                  type="file"
-                  accept="image/*,video/mp4,video/*"
-                  className="hidden"
-                  disabled={uploading === item.id}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) onFile(item.id, f);
-                    e.target.value = "";
-                  }}
-                />
-              </label>
-              <button
-                onClick={() => removeItem(item.id)}
-                className="rounded-lg border border-white/10 bg-white/5 p-2 text-muted-foreground hover:border-red-400/60 hover:text-red-300"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <ShowcaseCard
+            key={item.id}
+            item={item}
+            password={password}
+            onDelete={() => handleDeleteItem(item.id)}
+            refetch={refetch}
+          />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ShowcaseCard({
+  item,
+  password,
+  onDelete,
+  refetch,
+}: {
+  item: ShowcaseItem;
+  password: string;
+  onDelete: () => void;
+  refetch: () => void;
+}) {
+  const [title, setTitle] = useState(item.title);
+  const [description, setDescription] = useState(item.description);
+  const [uploading, setUploading] = useState(false);
+
+  const upsertItem = useServerFn(upsertShowcaseItem);
+  const registerShowcase = useServerFn(registerShowcaseMedia);
+
+  useEffect(() => {
+    setTitle(item.title);
+    setDescription(item.description);
+  }, [item.title, item.description]);
+
+  const hasChanges = title !== item.title || description !== item.description;
+
+  const handleSave = async () => {
+    try {
+      await upsertItem({
+        data: {
+          password,
+          id: item.id,
+          title,
+          description,
+          sort_order: item.sort_order || 0,
+        },
+      });
+      toast.success("Changes saved");
+      refetch();
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to save changes");
+    }
+  };
+
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+
+  const onFile = async (file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(
+        `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 25 MB.`
+      );
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `showcase/${item.id}/${Date.now()}-${safeName}`;
+
+      // Upload directly from client to storage
+      const { error: upErr } = await supabase.storage
+        .from("vatai-media")
+        .upload(path, file, { upsert: true });
+
+      if (upErr) throw upErr;
+
+      const media_type: "image" | "video" =
+        file.type.startsWith("video") || /\.mp4$/i.test(file.name) ? "video" : "image";
+
+      // Register the path in the DB
+      await registerShowcase({
+        data: {
+          password,
+          id: item.id,
+          path,
+          media_type,
+        },
+      });
+
+      toast.success("Media uploaded and saved");
+      refetch();
+    } catch (err) {
+      toast.error((err as Error).message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="glass-panel rounded-2xl p-4">
+      <div className="scanlines relative mb-4 aspect-video overflow-hidden rounded-xl bg-white/5">
+        {item.media_url ? (
+          item.media_type === "video" ? (
+            <video
+              src={item.media_url}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <img src={item.media_url} alt={item.title} className="h-full w-full object-cover" />
+          )
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+            <ImagePlus className="h-8 w-8" />
+          </div>
+        )}
+      </div>
+
+      <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+        Title
+      </label>
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[oklch(0.82_0.2_195)]"
+      />
+
+      <label className="mt-3 block text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+        Description
+      </label>
+      <textarea
+        value={description}
+        rows={2}
+        onChange={(e) => setDescription(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[oklch(0.82_0.2_195)]"
+      />
+
+      <div className="mt-3 flex items-center gap-2">
+        <label
+          className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 bg-white/5 px-3 py-2 text-xs hover:border-[oklch(0.82_0.2_195)] ${
+            uploading ? "opacity-60 pointer-events-none" : "cursor-pointer"
+          }`}
+        >
+          <Upload className="h-4 w-4" />
+          {uploading ? "Uploading…" : "Upload image / mp4"}
+          <input
+            type="file"
+            accept="image/*,video/mp4,video/*"
+            className="hidden"
+            disabled={uploading}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onFile(f);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {hasChanges && (
+          <button
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 rounded-lg border border-[oklch(0.82_0.2_195)] bg-white/5 px-3 py-2 text-sm text-[oklch(0.82_0.2_195)] hover:bg-[oklch(0.82_0.2_195)] hover:text-black transition animate-pulse"
+          >
+            <Save className="h-4 w-4" />
+            Save
+          </button>
+        )}
+        <button
+          onClick={onDelete}
+          className="rounded-lg border border-white/10 bg-white/5 p-2 text-muted-foreground hover:border-red-400/60 hover:text-red-300"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
@@ -449,7 +588,7 @@ function EditModal({
   const [buttonText, setButtonText] = useState(language.button_text);
 
   const update = useServerFn(updateLanguageContent);
-  const upload = useServerFn(uploadLanguageMedia);
+  const registerLanguage = useServerFn(registerLanguageMedia);
 
   const saveText = useMutation({
     mutationFn: () =>
@@ -464,21 +603,26 @@ function EditModal({
   });
 
   const uploadFile = async (kind: "image" | "audio", file: File) => {
-    const buf = await file.arrayBuffer();
-    let binary = "";
-    const bytes = new Uint8Array(buf);
-    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-    const base64 = btoa(binary);
-    await upload({
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${kind}/${language.code}/${Date.now()}-${safeName}`;
+
+    // Upload directly from client to storage
+    const { error: upErr } = await supabase.storage
+      .from("vatai-media")
+      .upload(path, file, { upsert: true });
+
+    if (upErr) throw upErr;
+
+    // Register path in DB
+    await registerLanguage({
       data: {
         password,
         code: language.code,
         kind,
-        filename: file.name,
-        content_type: file.type || (kind === "image" ? "image/*" : "audio/*"),
-        base64,
+        path,
       },
     });
+
     toast.success(`${kind === "image" ? "Image" : "Audio"} uploaded`);
     onSaved();
   };

@@ -50,6 +50,36 @@ export type Database = {
         }
         Relationships: []
       }
+      showcase_items: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          media_url: string
+          media_type: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          title?: string
+          description?: string
+          media_url?: string
+          media_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          media_url?: string
+          media_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
