@@ -145,3 +145,37 @@ export const uploadLanguageMedia = createServerFn({ method: "POST" })
 
     return { ok: true, url: signed.signedUrl };
   });
+
+/** Admin: upload a showcase item's media file (base64) and return a signed URL. */
+export const uploadShowcaseMedia = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z
+      .object({
+        password: z.string(),
+        id: z.string().min(1).max(100),
+        filename: z.string().min(1).max(200),
+        content_type: z.string().min(1).max(120),
+        base64: z.string().min(1),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    if (data.password !== ADMIN_PASS) throw new Error("Unauthorized");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
+    const safeName = data.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `showcase/${data.id}/${Date.now()}-${safeName}`;
+
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("vatai-media")
+      .upload(path, bytes, { contentType: data.content_type, upsert: true });
+    if (upErr) throw new Error(upErr.message);
+
+    const { data: signed, error: signErr } = await supabaseAdmin.storage
+      .from("vatai-media")
+      .createSignedUrl(path, SIGNED_URL_TTL);
+    if (signErr || !signed) throw new Error(signErr?.message ?? "sign failed");
+
+    return { ok: true, url: signed.signedUrl };
+  });

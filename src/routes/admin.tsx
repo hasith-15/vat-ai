@@ -11,12 +11,12 @@ import {
   listLanguages,
   updateLanguageContent,
   uploadLanguageMedia,
+  uploadShowcaseMedia,
 } from "@/lib/vatai.functions";
 import type { LanguageContent } from "@/lib/languages";
 import { FALLBACK_LANGUAGES } from "@/lib/languages";
 import {
   DEFAULT_SHOWCASE,
-  fileToDataUrl,
   loadShowcase,
   saveShowcase,
   type ShowcaseItem,
@@ -252,7 +252,7 @@ function Dashboard({ password, onSignOut }: { password: string; onSignOut: () =>
           </div>
         )
       ) : (
-        <ShowcaseManager />
+        <ShowcaseManager password={password} />
       )}
 
       <AnimatePresence>
@@ -272,8 +272,10 @@ function Dashboard({ password, onSignOut }: { password: string; onSignOut: () =>
 
 /* ---------------------------- Showcase Manager --------------------------- */
 
-function ShowcaseManager() {
+function ShowcaseManager({ password }: { password: string }) {
   const [items, setItems] = useState<ShowcaseItem[]>([]);
+  const [uploading, setUploading] = useState<string | null>(null);
+  const upload = useServerFn(uploadShowcaseMedia);
 
   useEffect(() => {
     setItems(loadShowcase());
@@ -301,41 +303,45 @@ function ShowcaseManager() {
       },
     ]);
 
-  const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // ~4.5 MB raw → ~6 MB base64
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB — Supabase storage handles large files
 
   const onFile = async (id: string, file: File) => {
     if (file.size > MAX_FILE_SIZE) {
       toast.error(
-        `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). ` +
-        `Max ${(MAX_FILE_SIZE / 1024 / 1024).toFixed(1)} MB for browser storage.`,
+        `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max 25 MB.`,
       );
       return;
     }
 
-    let dataUrl: string;
+    setUploading(id);
     try {
-      dataUrl = await fileToDataUrl(file);
-    } catch {
-      toast.error("Could not read that file");
-      return;
-    }
+      // Convert file to base64 for the server function
+      const buf = await file.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
 
-    const mediaType: "image" | "video" =
-      file.type.startsWith("video") || /\.mp4$/i.test(file.name) ? "video" : "image";
+      const res = await upload({
+        data: {
+          password,
+          id,
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+          base64,
+        },
+      });
 
-    try {
-      updateItem(id, { mediaUrl: dataUrl, mediaType });
+      const mediaType: "image" | "video" =
+        file.type.startsWith("video") || /\.mp4$/i.test(file.name) ? "video" : "image";
+
+      // Store only the Supabase signed URL — tiny string, no localStorage quota issues
+      updateItem(id, { mediaUrl: res.url, mediaType });
       toast.success("Media uploaded");
     } catch (err) {
-      // localStorage quota exceeded — revert the item so state stays consistent
-      updateItem(id, { mediaUrl: "", mediaType: "image" });
-      if (err instanceof DOMException && err.name === "QuotaExceededError") {
-        toast.error(
-          "Browser storage is full. Remove some showcase items or use smaller files.",
-        );
-      } else {
-        toast.error("Failed to save — browser storage may be full.");
-      }
+      toast.error((err as Error).message || "Upload failed");
+    } finally {
+      setUploading(null);
     }
   };
 
@@ -343,7 +349,7 @@ function ShowcaseManager() {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Uploads are stored in your browser (base64) and instantly render on the homepage grid.
+          Uploads are saved to cloud storage. Titles and descriptions sync to your browser.
         </p>
         <div className="flex gap-2">
           <button
@@ -396,13 +402,14 @@ function ShowcaseManager() {
             />
 
             <div className="mt-3 flex items-center gap-2">
-              <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 bg-white/5 px-3 py-2 text-xs hover:border-[oklch(0.82_0.2_195)]">
+              <label className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 bg-white/5 px-3 py-2 text-xs hover:border-[oklch(0.82_0.2_195)] ${uploading === item.id ? "opacity-60 pointer-events-none" : "cursor-pointer"}`}>
                 <Upload className="h-4 w-4" />
-                Upload image / mp4
+                {uploading === item.id ? "Uploading…" : "Upload image / mp4"}
                 <input
                   type="file"
                   accept="image/*,video/mp4,video/*"
                   className="hidden"
+                  disabled={uploading === item.id}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) onFile(item.id, f);
