@@ -301,15 +301,41 @@ function ShowcaseManager() {
       },
     ]);
 
+  const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // ~4.5 MB raw → ~6 MB base64
+
   const onFile = async (id: string, file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(
+        `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). ` +
+        `Max ${(MAX_FILE_SIZE / 1024 / 1024).toFixed(1)} MB for browser storage.`,
+      );
+      return;
+    }
+
+    let dataUrl: string;
     try {
-      const dataUrl = await fileToDataUrl(file);
-      const mediaType: "image" | "video" =
-        file.type.startsWith("video") || /\.mp4$/i.test(file.name) ? "video" : "image";
-      updateItem(id, { mediaUrl: dataUrl, mediaType });
-      toast.success("Media uploaded");
+      dataUrl = await fileToDataUrl(file);
     } catch {
       toast.error("Could not read that file");
+      return;
+    }
+
+    const mediaType: "image" | "video" =
+      file.type.startsWith("video") || /\.mp4$/i.test(file.name) ? "video" : "image";
+
+    try {
+      updateItem(id, { mediaUrl: dataUrl, mediaType });
+      toast.success("Media uploaded");
+    } catch (err) {
+      // localStorage quota exceeded — revert the item so state stays consistent
+      updateItem(id, { mediaUrl: "", mediaType: "image" });
+      if (err instanceof DOMException && err.name === "QuotaExceededError") {
+        toast.error(
+          "Browser storage is full. Remove some showcase items or use smaller files.",
+        );
+      } else {
+        toast.error("Failed to save — browser storage may be full.");
+      }
     }
   };
 

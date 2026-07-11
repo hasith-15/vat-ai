@@ -58,8 +58,13 @@ export function loadShowcase(): ShowcaseItem[] {
 
 export function saveShowcase(items: ShowcaseItem[]) {
   if (typeof window === "undefined") return;
+  // Let QuotaExceededError propagate so callers can handle it
   window.localStorage.setItem(KEY, JSON.stringify(items));
-  window.dispatchEvent(new CustomEvent("vatai:showcase-updated"));
+  try {
+    window.dispatchEvent(new CustomEvent("vatai:showcase-updated"));
+  } catch {
+    // swallow dispatch errors — the save itself succeeded
+  }
 }
 
 export function fileToDataUrl(file: File): Promise<string> {
