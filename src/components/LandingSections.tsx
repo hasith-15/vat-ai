@@ -451,7 +451,7 @@ const TIERS: Tier[] = [
     priceInr: "₹8,999",
     cadence: "/mo",
     features: [
-      "1,000 AI Minutes",
+      "200 AI Minutes",
       "Basic Voice Models",
       "Email Support",
       "Standard Integration",
@@ -465,7 +465,7 @@ const TIERS: Tier[] = [
     cadence: "/mo",
     highlighted: true,
     features: [
-      "5,000 AI Minutes",
+      "1,000 AI Minutes",
       "Premium Voices",
       "24/7 Priority Support",
       "Multi-Language Support",
