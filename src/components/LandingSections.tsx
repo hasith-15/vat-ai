@@ -448,7 +448,7 @@ const TIERS: Tier[] = [
     name: "Starter",
     subtitle: "For small teams beginning automation.",
     priceUsd: "$93.51",
-    priceInr: "₹8,299",
+    priceInr: "₹8,999",
     cadence: "/mo",
     features: [
       "1,000 AI Minutes",
